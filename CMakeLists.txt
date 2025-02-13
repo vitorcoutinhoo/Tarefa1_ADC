@@ -48,16 +48,17 @@ pico_enable_stdio_usb(adc 1)
 target_link_libraries(adc
         pico_stdlib
         hardware_adc
-        hardware_pwm)
+        hardware_pwm
+        )
 
 # Add the standard include files to the build
 target_include_directories(adc PRIVATE
-        ${CMAKE_CURRENT_LIST_DIR}
+        ${CMAKE_CURRENT_LIST_DIR}/lib
 )
 
 # Add any user requested libraries
 target_link_libraries(adc 
-        
+        hardware_i2c
         )
 
 pico_add_extra_outputs(adc)
