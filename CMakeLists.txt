@@ -35,7 +35,7 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(adc adc.c )
+add_executable(adc adc.c lib/ssd1306.c)
 
 pico_set_program_name(adc "adc")
 pico_set_program_version(adc "0.1")

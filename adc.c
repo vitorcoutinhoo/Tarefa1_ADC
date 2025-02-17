@@ -2,6 +2,8 @@
 #include "pico/stdlib.h"
 #include "hardware/adc.h"
 #include "hardware/pwm.h"
+#include "hardware/i2c.h"
+#include "ssd1306.h"
 
 #define VRX_PIN 27
 #define VRY_PIN 26
@@ -12,11 +14,17 @@
 #define RED_PIN 13
 #define BUTTON 5
 
+#define I2C_PORT i2c1
+#define I2C_SDA 14
+#define I2C_SCL 15
+#define endereco 0x3C
+
 #define CENTER_VALUE 2048
-#define DEAD_ZONE 110  // Faixa de tolerância (o centro não é 2048 sempre)
+#define DEAD_ZONE 200  // Faixa de tolerância (o centro não é 2048 sempre)
 
 uint32_t volatile last_time = 0;
 bool volatile leds = true;
+ssd1306_t ssd;
 
 void buttons_handler(uint gpio, uint32_t events) {
     uint32_t current_time = to_ms_since_boot(get_absolute_time());
@@ -49,6 +57,10 @@ int map_value(int value, int min_input, int max_input, int min_output, int max_o
     return (value - min_input) * (max_output - min_output) / (max_input - min_input) + min_output;
 }
 
+int map_to_display(int value, int min_input, int max_input, int min_output, int max_output) {
+    return (value - min_input) * (max_output - min_output) / (max_input - min_input) + min_output;
+}
+
 int main() {
     stdio_init_all();
     uint wrap = 4095;  // Valor máximo para o ADC (12 bits)
@@ -74,16 +86,30 @@ int main() {
     gpio_set_irq_enabled_with_callback(SW_PIN, GPIO_IRQ_EDGE_FALL, true, &buttons_handler);
     gpio_set_irq_enabled_with_callback(BUTTON, GPIO_IRQ_EDGE_FALL, true, &buttons_handler);
 
+    i2c_init(I2C_PORT, 400 * 1000);
+
+    gpio_set_function(I2C_SDA, GPIO_FUNC_I2C); 
+    gpio_set_function(I2C_SCL, GPIO_FUNC_I2C);
+
+    gpio_pull_up(I2C_SDA); 
+    gpio_pull_up(I2C_SCL);
+
+    // Inicializa e configura o display
+    ssd1306_init(&ssd, WIDTH, HEIGHT, false, endereco, I2C_PORT); 
+    ssd1306_config(&ssd); 
+    ssd1306_send_data(&ssd);
+
     while (true) {
+        
         adc_select_input(0);  
         uint16_t vry_value = adc_read();
         
         adc_select_input(1); 
         uint16_t vrx_value = adc_read();
 
-        int blue_pwm = 0;
-        int red_pwm = 0;
-
+        uint blue_pwm = 0;
+        uint red_pwm = 0;
+        
         if(leds) {
             // Controle do LED Azul (eixo Y)
             if (vry_value < CENTER_VALUE - DEAD_ZONE) 
@@ -99,12 +125,26 @@ int main() {
             else if (vrx_value > CENTER_VALUE + DEAD_ZONE) 
                 red_pwm = map_value(vrx_value, CENTER_VALUE + DEAD_ZONE, wrap, 0, wrap);
         }
-        
 
+        // Mapear os valores do joystick para a posição no display
+        uint x = map_to_display(vrx_value, 0, 4095, 0, 119);
+        uint y = map_to_display(vry_value, 0, 4095, 55, 0);
+
+        if (x == 118) x = 116;
+        if (x == 0) x = 4;
+
+        if (y == 55) y = 52;
+        if (y == 1) y = 4;
+
+        ssd1306_fill(&ssd, false);
+        ssd1306_rect(&ssd, 0, 0, 128, 64, true, false);
+        ssd1306_rect(&ssd, y, x, 8, 8, true, false);
+        ssd1306_send_data(&ssd);
+        
         pwm_set_gpio_level(BLUE_PIN, blue_pwm);
         pwm_set_gpio_level(RED_PIN, red_pwm);
         
-        printf("VRX: %u, VRY: %u, Red PWM: %d, Blue PWM: %d\n", vrx_value, vry_value, red_pwm, blue_pwm);
+        printf("VRX: %u, VRY: %u, Red PWM: %d, Blue PWM: %d, X: %d, Y: %d\n", vrx_value, vry_value, red_pwm, blue_pwm, x, y);
         
         sleep_ms(100);
     }
