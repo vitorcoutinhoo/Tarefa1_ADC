@@ -157,8 +157,9 @@ int main() {
         if (y == 55) y = 52;
         if (y == 1) y = 4;
 
-        // Desenha o quadrado e a borda no  display
-        ssd1306_fill(&ssd, false);
+        ssd1306_fill(&ssd, false); // Apaga o display
+
+        // Borda quando o led verde esta ligado
         if (border) {
             // superior esquerdo
             ssd1306_hline(&ssd, 0, 14, 0, true);
@@ -183,7 +184,10 @@ int main() {
             ssd1306_hline(&ssd, 41, 84, 63, true);
         }
         else
+            // Borda quando o led esta desligado
             ssd1306_rect(&ssd, 0, 0, 128, 64, true, false);
+
+        // Desenha o quadrado na posição y, x
         ssd1306_rect(&ssd, y, x, 8, 8, true, true);
         ssd1306_send_data(&ssd);
         
