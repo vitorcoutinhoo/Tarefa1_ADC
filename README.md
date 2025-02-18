@@ -73,3 +73,9 @@ Antes de compilar o código, é necessário instalar o SDK do Raspberry Pi Pico 
 - Pressionando o botão do joystick, a borda do display muda e alterna o estado do LED verde.
 
 - Pressionando o botão A, o controle de LEDs via PWM é ativado/desativado.
+
+### Vídeo demonstração
+
+Segue o link do vídeo demonstrando o funcionamento do código e uma breve explicação sobre.
+
+[Clique aqui para assistir o vídeo!](https://www.youtube.com/watch?v=xDEGSuYKsN8)
