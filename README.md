@@ -1,4 +1,4 @@
-Controle de LEDs e Display OLED com Raspberry Pi Pico
+## Controle de LEDs e Display OLED com Raspberry Pi Pico
 
 Este projeto utiliza um Raspberry Pi Pico para controlar LEDs RGB e exibir informações em um display OLED SSD1306, utilizando um joystick analógico.
 
